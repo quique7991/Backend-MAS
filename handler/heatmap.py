@@ -36,7 +36,7 @@ class Heatmap(BaseHandler):
 
     #@tornado.web.authenticated
     @tornado.gen.coroutine
-    def post(self,query):
+    def post(self,query="default"):
         '''
             lat: number with the latitude of the position of the person.
             lng: number with the longitude of the position of the person.
@@ -45,12 +45,15 @@ class Heatmap(BaseHandler):
         idUser = 1
         latitude = self.get_argument("lat")
         longitude = self.get_argument("lng")
+        type_item = self.get_argument("type")
+        value = int(self.get_argument("value"))
+        day = self.get_argument("day","False")
         model = self.settings['model']
         response = {}
-        if query == "positive":
-            response = yield model.add_point_to_heatmap(idUser,latitude,longitude,query)
-        elif query == 'negative':
-            response = yield model.add_point_to_heatmap(idUser,latitude,longitude,query)
+        if value < 0:
+            response = yield model.add_point_to_heatmap(idUser,latitude,longitude,"negative",type_item,value,day)
+        else:
+            response = yield model.add_point_to_heatmap(idUser,latitude,longitude,"positive",type_item,value,day)
         if response:
             self.write(json.dumps({'success': True,'response':response},default=json_util.default))
         else:

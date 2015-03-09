@@ -13,11 +13,32 @@
 33.781777, -84.395426 Tenth and home
 33.777229, -84.396187 Klauss 
 6. Use postman to try everything
-7. Add to the configuration file the APIKey
-8. Change the edge length of the route boxer to be a variable in the config file. Change the value al
-9. Using the bound routes, obtain the points that are within of those rectangles, using aggregation.
-10. Read todo in line 36 of routes.py
 11. Filter by the second / , like /routes/{lat: ,lng:}/filter
+12. Authentication
+http://tornadogists.com/4115580/
+13. Types of elements
+13.a Define the type of elements that we are going to use
+13.b Implement then on the sever
+14. Erase elements after certain amount of time
+http://docs.mongodb.org/manual/tutorial/expire-data/
+14.a Define the liveness of the elements.
+14.b Integrate liveness into the database
+15. Define the value of each type of element.
+15.a For the heatmap return as many elements as the value of the element, to ponderate them.
+15.b Integrate the value to the type of element.
+16. Calculate speed of elements
+16.a Each objectID has a embedded timestamp of creation, we can use this to query all the where created in the previous X amount of time. Then we use the two most recent for the users that are active and calculate the current average speed. But what about the direction?
+http://www.movable-type.co.uk/scripts/latlong.html
+But how we can use the knowledge about the final destination of the object?
+We could calculate the distance from the last two points, and then calculate the vector from the current position and the final position, and move in that direction.
+But then what about the physical constraints of the path?
+
+Option 2
+Initially calculate how long is it going to take the whole trip.
+We could use
+https://developers.google.com/maps/documentation/distancematrix/
+Define the lenght of each line in the polyline route, and calculate an aproximate initial time and finish when the person is over that polyline. When querying we verify if our time is bigger than and less than the interval. 
+Update every delta time for each person. Every five or 10 minutes? and every time a person change a polyline and a query of them show us that.
 
 Read 
 Rest Recommendations

@@ -4,10 +4,11 @@ import tornado.ioloop
 import tornado.options
 tornado.options.parse_command_line()
 
-from handler.base import Login, Logout
+from handler.base import Login, Logout,CASLogin
 from handler.user import User
 from handler.routes import Route
 from handler.heatmap import Heatmap 
+from handler.selectroute import SelectRoute
 import motor
 
 class Stop(tornado.web.RequestHandler):
@@ -23,8 +24,10 @@ def start(conf):
     application = tornado.web.Application([
     (r"/users",User, ),
     (r"/login", Login, ),
+    (r"/cas_login",CASLogin,),
     (r"/heatmaps/([a-z]+)", Heatmap),
-    (r"/routes", Route, )
+    (r"/routes", Route, ),
+    (r"/routes/select/([0-9]+)",SelectRoute,),
     ],
     model=Model(db),
     cookie_secret=conf.secret,
