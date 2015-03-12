@@ -25,7 +25,7 @@ def start(conf):
     (r"/users",User, ),
     (r"/login", Login, ),
     (r"/cas_login",CASLogin,),
-    (r"/heatmaps/([a-z]+)", Heatmap),
+    (r"/heatmaps/([a-z]*)", Heatmap),
     (r"/routes", Route, ),
     (r"/routes/select/([0-9]+)",SelectRoute,),
     ],

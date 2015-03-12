@@ -27,7 +27,8 @@ class Heatmap(BaseHandler):
         elif query == "negative":
             response = yield model.get_heatmap(latitude,longitude,radius,query,length)
         else:  
-            self.write({'success': False,'error':"Query "+query+" not defined yet"})
+            response['positive'] = yield model.get_heatmap(latitude,longitude,radius,"positive",length)
+            response['negative'] = yield model.get_heatmap(latitude,longitude,radius,"negative",length)
         if response:
             self.write(json.dumps({'success': True,'response':response},default=json_util.default))
         else:

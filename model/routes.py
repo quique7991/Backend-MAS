@@ -38,7 +38,10 @@ class _Route:
         new_dict['positive']=[]
         new_dict['negative']=[]
         result['route_index']=[]
+        result['score']=[]
         utc_time = self.obtain_utc_time()
+        total_numerator = 0
+        total_denominator = 0
         for routeIndex in range(len(routes_bbs)):
             #time in seconds in milliseconds
             time = (result['routes'][routeIndex]["legs"][0]["duration"]["value"])*1000
@@ -56,12 +59,39 @@ class _Route:
                 midpoint = midDistance(coordinate(point1[1],point1[0]),coordinate(point2[1],point2[0]))
                 future = self.db.persons.insert({'uid':idUser,'loc':{'type':'Point','coordinates':[float(midpoint.lng),float(midpoint.lat)]},'initial':utc_now,'finish':utc_future,'index':person_index_route,'temporal':True})
                 insert_result=yield future
-                logging.info(insert_result)
                 box = routes_bbs[routeIndex][boxIndex]
-                new_dict['positive'] += yield self.db.positive_heatmap.find({'loc': { '$geoWithin' :{'$geometry': {"type":"Polygon","coordinates":box}}}},{"loc.coordinates":1,"_id":0}).to_list(length=int(total))
-                new_dict['positive'] += yield self.db.persons.find({'loc':{'$geoWithin':{'$geometry':{'type':'Polygon','coordinates':box}}},'initial':{'$gte':utc_now},'finish':{'$lte':utc_future},'uid':{'$ne':idUser},'temporal':False},{"loc.coordinates":1,"_id":0}).to_list(length=int(total))
-                new_dict['negative'] += yield self.db.negative_heatmap.find({'loc': { '$geoWithin' : { '$geometry' : {"type":"Polygon","coordinates":box}}}},{"loc.coordinates":1,"_id":0}   ).to_list(length=int(total))
+                pos_temparray =[]
+                neg_temparray =[]
+                pos_temparray += yield self.db.positive_heatmap.find({'loc': { '$geoWithin' :{'$geometry': {"type":"Polygon","coordinates":box}}}},{"loc.coordinates":1,"_id":0}).to_list(length=int(total))
+                pos_temparray += yield self.db.persons.find({'loc':{'$geoWithin':{'$geometry':{'type':'Polygon','coordinates':box}}},'initial':{'$gte':utc_now},'finish':{'$lte':utc_future},'uid':{'$ne':idUser},'temporal':False},{"loc.coordinates":1,"_id":0}).to_list(length=int(total))
+                neg_temparray += yield self.db.negative_heatmap.find({'loc': { '$geoWithin' : { '$geometry' : {"type":"Polygon","coordinates":box}}}},{"loc.coordinates":1,"_id":0}   ).to_list(length=int(total))
+                numerator = 0
+                denominator = 0
+                for pos_item in pos_temparray:
+                    if "weight" in pos_item:
+                        weight = pos_item["weight"]
+                        value = pos_item["value"]
+                        numerator += value*weight/10.0
+                        denominator += weight
+                    else:
+                        logging.info("Item does not has a weight value")
+                for neg_item in neg_temparray:
+                    if "weight" in pos_item:
+                        weight = pos_item["weight"]
+                        value = pos_item["value"]
+                        numerator += value*weight/10.0
+                    else:
+                        logging.info("Item does not has a weight value")
+                if denominator != 0:
+                    total_numerator += lineLength*numerator/denominator
+                    total_denominator += lineLength
+                new_dict['positive'] += pos_temparray
+                new_dict['negative'] += neg_temparray
                 utc_now = utc_future
+            if total_denominator !=0:
+                result['score'].append(total_numerator/total_denominator)    
+            else:
+                result['score'].append(0)
         result['heatmaps']=(new_dict)
         self.db.persons.create_index(config.ttl_index["people"],sparse=True,background=True,expireAfterSeconds=config.ttl_dictionary["people"])
         self.db.persons.create_index([('loc', '2dsphere')],background=True)
